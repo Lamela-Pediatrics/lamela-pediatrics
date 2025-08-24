@@ -12,9 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { Search, Plus, Baby, Calendar, Weight, Ruler, Activity, TriangleAlert as AlertTriangle } from 'lucide-react-native';
-import type { Baby } from '@/types/database';
+import type { Baby as BabyType } from '@/types/database';
 
-interface BabyWithDoctor extends Baby {
+interface BabyWithDoctor extends BabyType {
   assigned_doctor?: {
     first_name: string;
     last_name: string;
