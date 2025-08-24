@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,9 +36,15 @@ export default function DashboardScreen() {
     activeMonitoring: 0,
   });
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadDashboardData();
+    
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const loadDashboardData = async () => {
@@ -78,12 +84,14 @@ export default function DashboardScreen() {
       .eq('recipient_id', user?.id)
       .eq('is_read', false);
 
-    setStats({
+    if (mounted.current) {
+      setStats({
       totalBabies: babies?.length || 0,
       todayAppointments: appointments?.length || 0,
       unreadMessages: messages?.length || 0,
       activeMonitoring: babies?.length || 0,
-    });
+      });
+    }
   };
 
   const loadStaffStats = async () => {
@@ -112,18 +120,24 @@ export default function DashboardScreen() {
       unreadCount = messages?.length || 0;
     }
 
-    setStats({
+    if (mounted.current) {
+      setStats({
       totalBabies: babies?.length || 0,
       todayAppointments: appointments?.length || 0,
       unreadMessages: unreadCount,
       activeMonitoring: babies?.length || 0,
-    });
+      });
+    }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadDashboardData();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const getDashboardTitle = () => {

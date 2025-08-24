@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,9 +33,15 @@ export default function GrowthScreen() {
   const [selectedBaby, setSelectedBaby] = useState<BabyWithVitals | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadGrowthData();
+    
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const loadGrowthData = async () => {
@@ -53,22 +59,32 @@ export default function GrowthScreen() {
           .eq('parent_id', user.id);
 
         const babyData = parentBabies?.map(pb => pb.babies).filter(Boolean) || [];
-        setBabies(babyData as BabyWithVitals[]);
+        if (mounted.current) {
+          setBabies(babyData as BabyWithVitals[]);
+        }
         if (babyData.length > 0) {
-          setSelectedBaby(babyData[0] as BabyWithVitals);
+          if (mounted.current) {
+            setSelectedBaby(babyData[0] as BabyWithVitals);
+          }
         }
       }
     } catch (error) {
       console.error('Error loading growth data:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadGrowthData();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const getWeightData = () => {

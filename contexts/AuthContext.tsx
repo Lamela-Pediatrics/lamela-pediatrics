@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types/database';
 import type { Session } from '@supabase/supabase-js';
@@ -18,32 +18,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+      if (mounted.current) {
+        setSession(session);
+      }
       if (session?.user) {
         loadUserProfile(session.user.id);
       } else {
-        setLoading(false);
+        if (mounted.current) {
+          setLoading(false);
+        }
       }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
+        if (mounted.current) {
+          setSession(session);
+        }
         if (session?.user) {
           await loadUserProfile(session.user.id);
         } else {
-          setUser(null);
-          setLoading(false);
+          if (mounted.current) {
+            setUser(null);
+            setLoading(false);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadUserProfile = async (userId: string) => {
@@ -55,11 +69,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) throw error;
-      setUser(data);
+      if (mounted.current) {
+        setUser(data);
+      }
     } catch (error) {
       console.error('Error loading user profile:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 

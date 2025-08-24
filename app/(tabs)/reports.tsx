@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,9 +36,15 @@ export default function ReportsScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadReportData();
+    
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const loadReportData = async () => {
@@ -96,25 +102,33 @@ export default function ReportsScreen() {
         weeklyData[day]++;
       });
 
-      setStats({
+      if (mounted.current) {
+        setStats({
         totalPatients: babies?.length || 0,
         newPatientsThisMonth: newPatients?.length || 0,
         appointmentsThisWeek: weeklyAppointments?.length || 0,
         activeMonitoring: babies?.length || 0,
         ageDistribution,
         weeklyAppointments: weeklyData,
-      });
+        });
+      }
     } catch (error) {
       console.error('Error loading report data:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadReportData();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const chartConfig = {

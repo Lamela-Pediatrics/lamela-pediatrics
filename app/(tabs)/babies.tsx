@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,9 +19,15 @@ export default function BabiesScreen() {
   const [babies, setBabies] = useState<BabyType[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadBabies();
+    
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const loadBabies = async () => {
@@ -45,19 +51,27 @@ export default function BabiesScreen() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        setBabies(data || []);
+        if (mounted.current) {
+          setBabies(data || []);
+        }
       }
     } catch (error) {
       console.error('Error loading babies:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadBabies();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const calculateAge = (birthDate: string) => {

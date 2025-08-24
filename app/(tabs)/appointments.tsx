@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,9 +17,15 @@ export default function AppointmentsScreen() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadAppointments();
+    
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const loadAppointments = async () => {
@@ -43,18 +49,26 @@ export default function AppointmentsScreen() {
       const { data, error } = await query;
       
       if (error) throw error;
-      setAppointments(data || []);
+      if (mounted.current) {
+        setAppointments(data || []);
+      }
     } catch (error) {
       console.error('Error loading appointments:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadAppointments();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const getStatusColor = (status: string) => {

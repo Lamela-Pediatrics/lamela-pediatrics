@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,8 +36,10 @@ export default function MessagesScreen() {
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
     loadMessages();
     
     // Subscribe to real-time message updates
@@ -58,6 +60,7 @@ export default function MessagesScreen() {
       .subscribe();
 
     return () => {
+      mounted.current = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -75,18 +78,26 @@ export default function MessagesScreen() {
         .order('sent_at', { ascending: false });
 
       if (error) throw error;
-      setMessages(data || []);
+      if (mounted.current) {
+        setMessages(data || []);
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    if (mounted.current) {
+      setRefreshing(true);
+    }
     await loadMessages();
-    setRefreshing(false);
+    if (mounted.current) {
+      setRefreshing(false);
+    }
   };
 
   const markAsRead = async (messageId: string) => {
@@ -96,11 +107,13 @@ export default function MessagesScreen() {
         .update({ is_read: true })
         .eq('id', messageId);
       
-      setMessages(prev => 
+      if (mounted.current) {
+        setMessages(prev => 
         prev.map(msg => 
           msg.id === messageId ? { ...msg, is_read: true } : msg
         )
-      );
+        );
+      }
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
