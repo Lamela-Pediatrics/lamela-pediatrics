@@ -55,17 +55,7 @@ export default function RegisterScreen() {
     
     if (error) {
       if (error.includes('User already registered') || error.includes('user_already_exists')) {
-        Alert.alert(
-          'Email Already Registered',
-          'An account with this email already exists. Would you like to sign in instead?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Sign In', 
-              onPress: () => router.replace('/(auth)/login')
-            }
-          ]
-        );
+        router.replace('/(auth)/login');
       } else {
         Alert.alert('Registration Failed', error);
       }
