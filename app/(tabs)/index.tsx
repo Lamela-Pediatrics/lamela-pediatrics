@@ -9,17 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { 
-  Baby, 
-  Calendar, 
-  MessageCircle, 
-  TrendingUp, 
-  Clock,
-  Users,
-  Activity,
-  Heart,
-  BarChart3
-} from 'lucide-react-native';
+import { Baby, Calendar, MessageCircle, TrendingUp, Clock, Users, Activity, Heart, ChartBar as BarChart3 } from 'lucide-react-native';
 
 interface DashboardStats {
   totalBabies: number;
