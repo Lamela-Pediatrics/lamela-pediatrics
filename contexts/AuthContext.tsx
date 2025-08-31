@@ -101,21 +101,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            phone: userData.phone,
+            role: userData.role || 'parent',
+          },
+        },
       });
 
       if (error) return { error: error.message };
 
+      // Profile will be created automatically by database trigger
+      // Wait a moment for the trigger to complete
       if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            ...userData,
-          });
-
-        if (profileError) return { error: profileError.message };
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
       return {};
