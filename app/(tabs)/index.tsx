@@ -17,7 +17,8 @@ import {
   Clock,
   Users,
   Activity,
-  Heart
+  Heart,
+  BarChart3
 } from 'lucide-react-native';
 
 interface DashboardStats {
